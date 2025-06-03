@@ -25,25 +25,29 @@ impl std::fmt::Display for RayforceError {
 
 impl std::error::Error for RayforceError {}
 
-pub struct Rayforce {
-    runtime: *mut runtime_t,
+pub struct RayforceBuilder {
+    args: Vec<CString>,
 }
 
-// Since runtime_t is a C pointer, we need to manually implement Send and Sync
-unsafe impl Send for Rayforce {}
-unsafe impl Sync for Rayforce {}
+impl RayforceBuilder {
+    pub fn new() -> Self {
+        Self {
+            args: vec![CString::new("rayforce").unwrap()],
+        }
+    }
 
-impl Rayforce {
-    pub fn new() -> Result<Self, RayforceError> {
+    pub fn with_arg(mut self, arg: &str) -> Self {
+        self.args.push(CString::new(arg).unwrap());
+        self
+    }
+
+    pub fn build(self) -> Result<Rayforce, RayforceError> {
         unsafe {
-            // Initialize Rayforce with command line arguments
-            let args = vec![
-                CString::new("rayforce").unwrap(),
-                CString::new("-r").unwrap(),
-                CString::new("1").unwrap(),
-            ];
-            let mut c_args: Vec<*mut c_char> =
-                args.iter().map(|arg| arg.as_ptr() as *mut c_char).collect();
+            let mut c_args: Vec<*mut c_char> = self
+                .args
+                .iter()
+                .map(|arg| arg.as_ptr() as *mut c_char)
+                .collect();
             c_args.push(ptr::null_mut());
 
             println!("Creating runtime...");
@@ -55,6 +59,20 @@ impl Rayforce {
                 Err(RayforceError::RuntimeCreationFailed)
             }
         }
+    }
+}
+
+pub struct Rayforce {
+    runtime: *mut runtime_t,
+}
+
+// Since runtime_t is a C pointer, we need to manually implement Send and Sync
+unsafe impl Send for Rayforce {}
+unsafe impl Sync for Rayforce {}
+
+impl Rayforce {
+    pub fn new() -> Result<Self, RayforceError> {
+        RayforceBuilder::new().with_arg("-r").with_arg("0").build()
     }
 
     pub fn get_version(&self) -> u8 {

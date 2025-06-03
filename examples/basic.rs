@@ -1,7 +1,3 @@
-use std::cell::RefCell;
-use std::ffi::CString;
-use std::os::raw::c_char;
-use std::ptr;
 use tokio::time::{sleep, Duration};
 
 use rayforce::*;
@@ -15,8 +11,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Rayforce task (runs on local thread)
     handles.push(tokio::spawn(async {
-        let rayforce = Rayforce::new().unwrap();
-        println!("Rayforce initialized in local task");
+        let rayforce = RayforceBuilder::new()
+            .with_arg("-r")
+            .with_arg("1")
+            .build()
+            .unwrap();
 
         // Do Rayforce-specific work
         let version = rayforce.get_version();
