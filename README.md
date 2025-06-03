@@ -2,6 +2,42 @@
 
 This crate provides Rust bindings for the Rayforce database library. It allows you to use Rayforce's functionality from Rust code in a safe and idiomatic way.
 
+## System Requirements
+
+Before using this crate, you need to have the Rayforce library installed on your system. The following components are required:
+
+- Rayforce C library
+- pkg-config
+- A C compiler (gcc or clang)
+
+## Installation
+
+### 1. Install Rayforce Library
+
+First, you need to install the Rayforce library on your system. The library should be installed in a standard location (e.g., `/usr/local/lib` and `/usr/local/include`).
+
+### 2. Install pkg-config File
+
+Copy the `rayforce.pc` file to your system's pkg-config directory:
+
+```bash
+# For system-wide installation (requires sudo)
+sudo cp rayforce.pc /usr/lib/pkgconfig/
+# OR for user-specific installation
+mkdir -p ~/.local/lib/pkgconfig
+cp rayforce.pc ~/.local/lib/pkgconfig/
+```
+
+### 3. Verify Installation
+
+You can verify the installation by running:
+
+```bash
+pkg-config --libs --cflags rayforce
+```
+
+This should output the necessary compiler and linker flags.
+
 ## Features
 
 - Safe Rust wrappers around the Rayforce C API
@@ -16,7 +52,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rayforce-rs = { path = "path/to/rayforce-rs" }
+rayforce-rs = "0.1.0"
 ```
 
 ## Example

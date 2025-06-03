@@ -21,7 +21,7 @@
  *   SOFTWARE.
  */
 
-#include "../rayforce/core/rayforce.h"
-#include "../rayforce/core/def.h"
-#include "../rayforce/core/runtime.h"
-#include "../rayforce/core/string.h"
+#include <rayforce/core/rayforce.h>
+#include <rayforce/core/def.h>
+#include <rayforce/core/runtime.h>
+#include <rayforce/core/string.h>
