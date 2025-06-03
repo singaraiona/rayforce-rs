@@ -2,7 +2,7 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 use std::fmt;
 use std::os::raw::c_char;
 use std::ptr;
@@ -50,10 +50,8 @@ impl RayforceBuilder {
                 .collect();
             c_args.push(ptr::null_mut());
 
-            println!("Creating runtime...");
             let runtime = runtime_create(c_args.len() as i32 - 1, c_args.as_mut_ptr());
             if !runtime.is_null() {
-                println!("Runtime created successfully");
                 Ok(Rayforce { runtime })
             } else {
                 Err(RayforceError::RuntimeCreationFailed)
@@ -86,11 +84,25 @@ impl Rayforce {
     pub fn as_ptr(&self) -> *mut runtime_t {
         self.runtime
     }
+
+    pub fn eval_str(&self, code: &CStr) -> RayObj {
+        unsafe {
+            let obj = eval_str(code.as_ptr() as *const i8);
+            RayObj::from_raw(obj)
+        }
+    }
+
+    pub fn eval_obj_str(&self, code: &RayObj, name: &RayObj) -> RayObj {
+        unsafe {
+            let obj = ray_eval_str(code.as_ptr() as *mut obj_t, name.as_ptr() as *mut obj_t);
+            RayObj::from_raw(obj)
+        }
+    }
 }
 
 impl Drop for Rayforce {
     fn drop(&mut self) {
-        unsafe { runtime_destroy() }
+        unsafe { runtime_destroy() };
     }
 }
 
@@ -111,8 +123,12 @@ impl RayObj {
     }
 
     /// Get the type of the object
-    pub fn type_(&self) -> i8 {
+    pub fn type_of(&self) -> i8 {
         unsafe { (*self.ptr).type_ }
+    }
+
+    pub fn is_nil(&self) -> bool {
+        unsafe { is_null(self.ptr) == 1 }
     }
 }
 
