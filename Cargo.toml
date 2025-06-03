@@ -1,0 +1,23 @@
+[package]
+name = "rayforce-rs"
+version = "0.1.0"
+edition = "2021"
+description = "Rust bindings for Rayforce database"
+license = "MIT"
+repository = "https://github.com/singaraiona/rayforce-rs"
+documentation = "https://docs.rs/rayforce-rs"
+readme = "README.md"
+keywords = ["database", "rayforce", "bindings"]
+categories = ["database", "foreign-function-interface"]
+
+[lib]
+name = "rayforce"
+crate-type = ["rlib"]
+
+[dependencies]
+libc = "0.2"
+thiserror = "1.0"
+
+[build-dependencies]
+bindgen = "0.69.1"
+cc = "1.0"
