@@ -21,31 +21,28 @@ rayforce-rs = { path = "path/to/rayforce-rs" }
 
 ## Example
 
-```rust
-use rayforce_rs::{init, cleanup, b8, i32, f64, symbol, drop};
+The crate includes a comprehensive example that demonstrates:
+- Runtime initialization and management
+- Version checking
+- Command line argument handling
+- File descriptor mapping
+- External runtime handling
+- Runtime execution
+- Proper cleanup
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Initialize Rayforce
-    init()?;
-
-    // Create some objects
-    let bool_val = b8(true);
-    let int_val = i32(42);
-    let float_val = f64(3.14);
-    let sym_val = symbol("test");
-
-    // Use the objects...
-
-    // Clean up
-    drop(bool_val);
-    drop(int_val);
-    drop(float_val);
-    drop(sym_val);
-    cleanup();
-
-    Ok(())
-}
+Run it with:
+```bash
+cargo run --example basic
 ```
+
+The example shows how to:
+1. Initialize the Rayforce runtime
+2. Check the version
+3. Handle command line arguments
+4. Work with file descriptor mappings
+5. Access external runtime
+6. Execute the runtime
+7. Clean up resources
 
 ## Safety
 

@@ -17,6 +17,7 @@ crate-type = ["rlib"]
 [dependencies]
 libc = "0.2"
 thiserror = "1.0"
+tokio = { version = "1.36", features = ["full"] }
 
 [build-dependencies]
 bindgen = "0.69.1"
