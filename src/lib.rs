@@ -144,11 +144,68 @@ impl From<&[i64]> for RayObj {
     }
 }
 
-// impl AsMut<bool> for RayObj {
-//     fn as_mut(&mut self) -> &mut bool {
-//         unsafe { &mut *(*self.ptr).__bindgen_anon_1.b8.as_mut() as &mut bool }
-//     }
-// }
+impl From<bool> for RayObj {
+    fn from(val: bool) -> Self {
+        unsafe {
+            let ptr = b8(val as b8_t);
+            RayObj { ptr }
+        }
+    }
+}
+
+impl From<u8> for RayObj {
+    fn from(val: u8) -> Self {
+        unsafe {
+            let ptr = u8_(val as u8_t);
+            RayObj { ptr }
+        }
+    }
+}
+
+impl From<i16> for RayObj {
+    fn from(val: i16) -> Self {
+        unsafe {
+            let ptr = i16_(val as i16_t);
+            RayObj { ptr }
+        }
+    }
+}
+
+impl From<i32> for RayObj {
+    fn from(val: i32) -> Self {
+        unsafe {
+            let ptr = i32_(val as i32_t);
+            RayObj { ptr }
+        }
+    }
+}
+
+impl From<f64> for RayObj {
+    fn from(val: f64) -> Self {
+        unsafe {
+            let ptr = f64_(val as f64_t);
+            RayObj { ptr }
+        }
+    }
+}
+
+impl From<&str> for RayObj {
+    fn from(val: &str) -> Self {
+        unsafe {
+            let ptr = string_from_str(val.as_ptr() as *const i8, val.len() as i64);
+            RayObj { ptr }
+        }
+    }
+}
+
+impl From<String> for RayObj {
+    fn from(val: String) -> Self {
+        unsafe {
+            let ptr = string_from_str(val.as_ptr() as *const i8, val.len() as i64);
+            RayObj { ptr }
+        }
+    }
+}
 
 impl AsMut<i64> for RayObj {
     fn as_mut(&mut self) -> &mut i64 {
@@ -169,6 +226,88 @@ impl AsMut<[i64]> for RayObj {
             let len = anon.as_mut().len as usize;
             let raw = anon.as_mut().raw.as_mut_ptr() as *mut i64;
             std::slice::from_raw_parts_mut(raw, len)
+        }
+    }
+}
+
+impl AsMut<bool> for RayObj {
+    fn as_mut(&mut self) -> &mut bool {
+        unsafe {
+            let b8_ptr = (*self.ptr).__bindgen_anon_1.b8.as_mut();
+            std::mem::transmute::<&mut i8, &mut bool>(b8_ptr)
+        }
+    }
+}
+
+impl AsMut<u8> for RayObj {
+    fn as_mut(&mut self) -> &mut u8 {
+        unsafe { (*self.ptr).__bindgen_anon_1.u8_.as_mut() }
+    }
+}
+
+impl AsMut<i16> for RayObj {
+    fn as_mut(&mut self) -> &mut i16 {
+        unsafe { (*self.ptr).__bindgen_anon_1.i16_.as_mut() }
+    }
+}
+
+impl AsMut<i32> for RayObj {
+    fn as_mut(&mut self) -> &mut i32 {
+        unsafe { (*self.ptr).__bindgen_anon_1.i32_.as_mut() }
+    }
+}
+
+impl AsMut<[u8]> for RayObj {
+    fn as_mut(&mut self) -> &mut [u8] {
+        unsafe {
+            let anon = &mut (*self.ptr).__bindgen_anon_1.__bindgen_anon_1;
+            let len = anon.as_mut().len as usize;
+            let raw = anon.as_mut().raw.as_mut_ptr() as *mut u8;
+            std::slice::from_raw_parts_mut(raw, len)
+        }
+    }
+}
+
+impl AsMut<[i16]> for RayObj {
+    fn as_mut(&mut self) -> &mut [i16] {
+        unsafe {
+            let anon = &mut (*self.ptr).__bindgen_anon_1.__bindgen_anon_1;
+            let len = anon.as_mut().len as usize;
+            let raw = anon.as_mut().raw.as_mut_ptr() as *mut i16;
+            std::slice::from_raw_parts_mut(raw, len)
+        }
+    }
+}
+
+impl AsMut<[i32]> for RayObj {
+    fn as_mut(&mut self) -> &mut [i32] {
+        unsafe {
+            let anon = &mut (*self.ptr).__bindgen_anon_1.__bindgen_anon_1;
+            let len = anon.as_mut().len as usize;
+            let raw = anon.as_mut().raw.as_mut_ptr() as *mut i32;
+            std::slice::from_raw_parts_mut(raw, len)
+        }
+    }
+}
+
+impl AsMut<[f64]> for RayObj {
+    fn as_mut(&mut self) -> &mut [f64] {
+        unsafe {
+            let anon = &mut (*self.ptr).__bindgen_anon_1.__bindgen_anon_1;
+            let len = anon.as_mut().len as usize;
+            let raw = anon.as_mut().raw.as_mut_ptr() as *mut f64;
+            std::slice::from_raw_parts_mut(raw, len)
+        }
+    }
+}
+
+impl AsMut<str> for RayObj {
+    fn as_mut(&mut self) -> &mut str {
+        unsafe {
+            let anon = &mut (*self.ptr).__bindgen_anon_1.__bindgen_anon_1;
+            let len = anon.as_mut().len as usize;
+            let raw = anon.as_mut().raw.as_mut_ptr() as *mut u8;
+            std::str::from_utf8_unchecked_mut(std::slice::from_raw_parts_mut(raw, len))
         }
     }
 }
@@ -231,6 +370,10 @@ mod tests {
         let mut obj2 = RayObj::from(vec.as_slice());
         let val: &mut [i64] = obj2.as_mut();
         assert_eq!(val, vec.as_slice());
+
+        let mut obj3 = RayObj::from("Hello, world!");
+        let val: &mut str = obj3.as_mut();
+        assert_eq!(val, "Hello, world!");
 
         drop(rayforce);
     }
