@@ -8,7 +8,7 @@ repository = "https://github.com/singaraiona/rayforce-rs"
 documentation = "https://github.com/singaraiona/rayforce-rs"
 readme = "README.md"
 keywords = ["database", "rayforce", "bindings"]
-categories = ["database", "foreign-function-interface"]
+categories = ["database"]
 
 [lib]
 name = "rayforce"
