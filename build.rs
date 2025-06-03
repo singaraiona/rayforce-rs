@@ -30,7 +30,14 @@ fn main() {
         .expect("Unable to generate bindings");
 
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+    let bindings_path = out_path.join("bindings.rs");
     bindings
-        .write_to_file(out_path.join("bindings.rs"))
+        .write_to_file(&bindings_path)
         .expect("Couldn't write bindings!");
+
+    // Add type aliases to the generated bindings
+    let mut content = std::fs::read_to_string(&bindings_path).expect("Failed to read bindings");
+    content = content.replace("_TYPE: u32 =", "_TYPE: i8 =");
+    content = content.replace("MAX_TYPE: i8 =", "MAX_TYPE: u32 =");
+    std::fs::write(&bindings_path, content).expect("Failed to write modified bindings");
 }

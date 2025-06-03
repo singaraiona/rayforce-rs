@@ -2,10 +2,79 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
+use std::ffi::CString;
 use std::fmt;
+use std::os::raw::c_char;
+use std::ptr;
 
 // Include the generated bindings
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+
+#[derive(Debug)]
+pub enum RayforceError {
+    RuntimeCreationFailed,
+}
+
+impl std::fmt::Display for RayforceError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            RayforceError::RuntimeCreationFailed => write!(f, "Failed to create runtime"),
+        }
+    }
+}
+
+impl std::error::Error for RayforceError {}
+
+pub struct Rayforce {
+    runtime: *mut runtime_t,
+}
+
+// Since runtime_t is a C pointer, we need to manually implement Send and Sync
+unsafe impl Send for Rayforce {}
+unsafe impl Sync for Rayforce {}
+
+impl Rayforce {
+    pub fn new() -> Result<Self, RayforceError> {
+        unsafe {
+            // Initialize Rayforce with command line arguments
+            let args = vec![
+                CString::new("rayforce").unwrap(),
+                CString::new("-r").unwrap(),
+                CString::new("1").unwrap(),
+            ];
+            let mut c_args: Vec<*mut c_char> =
+                args.iter().map(|arg| arg.as_ptr() as *mut c_char).collect();
+            c_args.push(ptr::null_mut());
+
+            println!("Creating runtime...");
+            let runtime = runtime_create(c_args.len() as i32 - 1, c_args.as_mut_ptr());
+            if !runtime.is_null() {
+                println!("Runtime created successfully");
+                Ok(Rayforce { runtime })
+            } else {
+                Err(RayforceError::RuntimeCreationFailed)
+            }
+        }
+    }
+
+    pub fn get_version(&self) -> u8 {
+        unsafe { version() }
+    }
+
+    pub fn run(&self) -> i32 {
+        unsafe { runtime_run() }
+    }
+
+    pub fn as_ptr(&self) -> *mut runtime_t {
+        self.runtime
+    }
+}
+
+impl Drop for Rayforce {
+    fn drop(&mut self) {
+        unsafe { runtime_destroy() }
+    }
+}
 
 /// A safe wrapper around the Rayforce object pointer
 pub struct RayObj {
@@ -47,9 +116,42 @@ impl From<i64> for RayObj {
     }
 }
 
-impl Into<i64> for RayObj {
-    fn into(self) -> i64 {
-        unsafe { *(*self.ptr).__bindgen_anon_1.i64_.as_ref() }
+impl From<&[i64]> for RayObj {
+    fn from(val: &[i64]) -> Self {
+        unsafe {
+            let mut obj = RayObj::from_raw(vector(TYPE_I64 as i8, val.len() as i64));
+            <RayObj as AsMut<[i64]>>::as_mut(&mut obj).copy_from_slice(val);
+            obj
+        }
+    }
+}
+
+// impl AsMut<bool> for RayObj {
+//     fn as_mut(&mut self) -> &mut bool {
+//         unsafe { &mut *(*self.ptr).__bindgen_anon_1.b8.as_mut() as &mut bool }
+//     }
+// }
+
+impl AsMut<i64> for RayObj {
+    fn as_mut(&mut self) -> &mut i64 {
+        unsafe { (*self.ptr).__bindgen_anon_1.i64_.as_mut() }
+    }
+}
+
+impl AsMut<f64> for RayObj {
+    fn as_mut(&mut self) -> &mut f64 {
+        unsafe { (*self.ptr).__bindgen_anon_1.f64_.as_mut() }
+    }
+}
+
+impl AsMut<[i64]> for RayObj {
+    fn as_mut(&mut self) -> &mut [i64] {
+        unsafe {
+            let anon = &mut (*self.ptr).__bindgen_anon_1.__bindgen_anon_1;
+            let len = anon.as_mut().len as usize;
+            let raw = anon.as_mut().raw.as_mut_ptr() as *mut i64;
+            std::slice::from_raw_parts_mut(raw, len)
+        }
     }
 }
 
@@ -89,16 +191,29 @@ impl fmt::Debug for RayObj {
     }
 }
 
+impl Into<i64> for RayObj {
+    fn into(self) -> i64 {
+        unsafe { *(*self.ptr).__bindgen_anon_1.i64_.as_ref() }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_obj_structure() {
-        unsafe { ray_init() };
-        let obj = RayObj::from(123);
-        let val: i64 = obj.into();
+        let rayforce = Rayforce::new().unwrap();
+
+        let obj1 = RayObj::from(123);
+        let val: i64 = obj1.into();
         assert_eq!(val, 123);
-        unsafe { ray_clean() };
+
+        let vec = vec![1, 2, 3];
+        let mut obj2 = RayObj::from(vec.as_slice());
+        let val: &mut [i64] = obj2.as_mut();
+        assert_eq!(val, vec.as_slice());
+
+        drop(rayforce);
     }
 }
